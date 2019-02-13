@@ -1,11 +1,14 @@
 require 'tmpdir'
 require 'open3'
+require 'rubocop'
 
 class Runner
-  def initialize(repo, config:)
+  FORMATTERS = RuboCop::Formatter::FormatterSet::BUILTIN_FORMATTERS_FOR_KEYS.keys
+
+  def initialize(repo, configs:)
     repo = "git@github.com:#{repo}.git" if repo.match(%r!\A[^/]+/[^/]+\z!)
     @repo = repo
-    @config = config
+    @configs = configs
   end
 
   def run
@@ -13,13 +16,15 @@ class Runner
       @working_dir = dir
 
       fetch
-      run_rubocop
+      configs.each do |config|
+        run_rubocop_with_config(config: config)
+      end
     end
   end
 
   private
 
-  attr_reader :repo, :config, :working_dir
+  attr_reader :repo, :configs, :working_dir
 
   def fetch
     system! 'git', 'clone', '--depth=1', repo, working_dir
@@ -33,8 +38,25 @@ class Runner
     raise "Unexpected status: #{$?.exitstatus}" unless $?.success?
   end
 
-  def run_rubocop
-    cmd = ['rubocop', '--debug']
+  def run_rubocop_with_config(config:)
+    config_opt =
+      case config
+      when :force_default_config
+        ['--force-default-config']
+      else
+        ['--config', config]
+      end
+
+    exec_rubocop(*config_opt) # With default formatter
+    FORMATTERS.each do |f|
+      # Changing formatter uses the cache, so it does not take a long time.
+      exec_rubocop '-f', f, *config_opt
+    end
+    exec_rubocop '--auto-correct', *config_opt
+  end
+
+  def exec_rubocop(*opts)
+    cmd = ['rubocop', '--debug'] + opts
     puts "$ " + cmd.join(' ')
     out, status = Open3.capture2e(*cmd, chdir: working_dir)
     print out

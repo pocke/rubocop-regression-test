@@ -1,14 +1,11 @@
-require 'optparse'
 require_relative 'lib/runner'
 
 def main(argv)
-  opt = OptionParser.new
-  params = {}
-  opt.on('--config str') {|str| params[:config] = str}
-  args = opt.parse(argv)
-  raise "unexpected arguments" if args.size != 1
+  raise "unexpected arguments" if argv.size != 1
 
-  runner = Runner.new(args.first, config: params[:config])
+  configs = (ENV['CONFIGS'] && ENV['CONFIGS'].split(' ')) || [:force_default_config]
+
+  runner = Runner.new(argv.first, configs: configs)
   runner.run
 end
 
