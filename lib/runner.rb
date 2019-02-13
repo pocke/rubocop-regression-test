@@ -58,6 +58,9 @@ class Runner
   def exec_rubocop(*opts)
     cmd = ['rubocop', '--debug'] + opts
     puts "$ " + cmd.join(' ')
+    # TODO: Replace capture2e with some pipe method,
+    #       because capture2e stores output as a string.
+    #       It may uses too much memory.
     out, status = Open3.capture2e(*cmd, chdir: working_dir)
     print out
     raise "Unexpected status: #{status.exitstatus}" unless [0, 1].include?(status.exitstatus)
