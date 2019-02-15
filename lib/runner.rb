@@ -1,6 +1,5 @@
 require 'tmpdir'
 require 'open3'
-require 'rubocop'
 
 class Runner
   class ExecRuboCopError < StandardError
