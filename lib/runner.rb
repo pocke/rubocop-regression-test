@@ -82,7 +82,6 @@ class Runner
     #       because capture2e stores output as a string.
     #       It may uses too much memory.
     out, status = Open3.capture2e(*cmd, chdir: working_dir)
-    print out
     raise ExecRuboCopError.new(message: "Unexpected status: #{status.exitstatus}", command: cmd, repo: repo, sha: sha) unless [0, 1].include?(status.exitstatus)
     raise ExecRuboCopError.new(message: "An error occrred! see the log.", command: cmd, repo: repo, sha: sha) if out =~ /An error occurred while/
   end
