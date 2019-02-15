@@ -25,15 +25,12 @@ TARGET_REPOSITORIES = [
 
 def run_one_repo(argv)
   raise "unexpected arguments" if argv.size != 1
-
-  configs = (ENV['CONFIGS'] && ENV['CONFIGS'].split(' ')) || [:force_default_config]
-
-  runner = Runner.new(argv.first, configs: configs)
-  runner.run
+  configs = ConfigGenerator.generate_configs + [:force_default_config, nil]
+  Runner.new(argv.first, configs: configs).run
 end
 
 def run_all_repos
-  configs = ConfigGenerator.generate_configs + [:force_default_config]
+  configs = ConfigGenerator.generate_configs + [:force_default_config, nil]
   TARGET_REPOSITORIES.each do |repo|
     Runner.new(repo, configs: configs).run
   end

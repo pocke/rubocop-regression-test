@@ -27,9 +27,10 @@ module ConfigGenerator
     end
 
     rubocop_yml_contents.map do |content|
-      File.join(BASE_DIRECTORY, Time.now.to_f.to_s + '.yml').tap do |tmppath|
-        File.write(tmppath, content.to_yaml)
-      end
+      tmppath = File.join(BASE_DIRECTORY, Time.now.to_f.to_s + '.yml')
+      cop_names = content.keys
+      File.write(tmppath, content.to_yaml)
+      [tmppath, cop_names]
     end
   end
 

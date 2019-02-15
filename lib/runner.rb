@@ -16,8 +16,8 @@ class Runner
       @working_dir = dir
 
       fetch
-      configs.each do |config|
-        run_rubocop_with_config(config: config)
+      configs.each do |config, cop_names|
+        run_rubocop_with_config(config: config, cop_names: cop_names)
       end
     end
   end
@@ -38,21 +38,25 @@ class Runner
     raise "Unexpected status: #{$?.exitstatus}" unless $?.success?
   end
 
-  def run_rubocop_with_config(config:)
-    config_opt =
+  def run_rubocop_with_config(config:, cop_names:)
+    opt =
       case config
       when :force_default_config
         ['--force-default-config']
       else
         ['--config', config]
       end
+    if cop_names
+      opt << '--only'
+      opt << cop_names.join(',')
+    end
 
-    exec_rubocop(*config_opt) # With default formatter
+    exec_rubocop(*opt) # With default formatter
     FORMATTERS.each do |f|
       # Changing formatter uses the cache, so it does not take a long time.
-      exec_rubocop '-f', f, *config_opt
+      exec_rubocop '-f', f, *opt
     end
-    exec_rubocop '--auto-correct', *config_opt
+    exec_rubocop '--auto-correct', *opt
   end
 
   def exec_rubocop(*opts)
