@@ -14,17 +14,18 @@ class Runner
     def message
       <<~END
         #{@message}
-
         Please try executing the following command in #{@repo}, commit #{@sha}
         #{@command.join(' ')}
       END
     end
   end
 
-  def initialize(repo, configs:)
+  def initialize(repo, configs:, error_queue:, debug:)
     repo = "git@github.com:#{repo}.git" if repo.match(%r!\A[^/]+/[^/]+\z!)
     @repo = repo
     @configs = configs
+    @error_queue = error_queue
+    @debug = debug
   end
 
   def run
@@ -40,18 +41,27 @@ class Runner
 
   private
 
-  attr_reader :repo, :configs, :working_dir, :sha
+  attr_reader :repo, :configs, :working_dir, :sha, :error_queue, :debug
 
   def fetch
     system! 'git', 'clone', '--depth=1', repo, working_dir
-    print "HEAD: "
-    @sha, status = Open3.capture2('git', 'rev-parse', 'HEAD', chdir: working_dir)
+    print "HEAD: " if debug
+    sha, status = Open3.capture2('git', 'rev-parse', 'HEAD', chdir: working_dir)
+    @sha = sha.chomp
     raise "Unexpected status #{status.exitstatus}" unless status.success?
-    puts @sha
+    puts @sha if debug
   end
 
   def system!(*cmd)
-    puts "$ " + cmd.join(' ')
+    puts "$ " + cmd.join(' ') if debug
+    unless debug
+      if cmd.last.is_a?(Hash)
+        opt = cmd.last.merge({out: '/dev/null', err: '/dev/null'})
+        cmd = [*cmd[0..-2], opt]
+      else
+        cmd = [*cmd, {out: '/dev/null', err: '/dev/null'}]
+      end
+    end
     system(*cmd)
     raise "Unexpected status: #{$?.exitstatus}" unless $?.success?
   end
@@ -77,12 +87,12 @@ class Runner
   def exec_rubocop(*opts)
     cmd = ['rubocop', '--debug', '--rails'] + opts
     cmd << '--parallel' unless opts.include?('--auto-correct')
-    puts "$ " + cmd.join(' ')
+    puts "$ " + cmd.join(' ') if debug
     # TODO: Replace capture2e with some pipe method,
     #       because capture2e stores output as a string.
     #       It may uses too much memory.
     out, status = Open3.capture2e(*cmd, chdir: working_dir)
-    raise ExecRuboCopError.new(message: "Unexpected status: #{status.exitstatus}", command: cmd, repo: repo, sha: sha) unless [0, 1].include?(status.exitstatus)
-    raise ExecRuboCopError.new(message: "An error occrred! see the log.", command: cmd, repo: repo, sha: sha) if out =~ /An error occurred while/
+    error_queue.push ExecRuboCopError.new(message: "Unexpected status: #{status.exitstatus}", command: cmd, repo: repo, sha: sha) unless [0, 1].include?(status.exitstatus)
+    error_queue.push ExecRuboCopError.new(message: "An error occrred! see the log.", command: cmd, repo: repo, sha: sha) if out =~ /An error occurred while/
   end
 end
