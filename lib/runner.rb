@@ -3,6 +3,24 @@ require 'open3'
 require 'rubocop'
 
 class Runner
+  class ExecRuboCopError < StandardError
+    def initialize(message:, command:, repo:, sha:)
+      @message = message
+      @command = command
+      @repo = repo
+      @sha = sha
+    end
+
+    def message
+      <<~END
+        #{@message}
+
+        Please try executing the following command in #{@repo}, commit #{@sha}
+        #{@command.join(' ')}
+      END
+    end
+  end
+
   def initialize(repo, configs:)
     repo = "git@github.com:#{repo}.git" if repo.match(%r!\A[^/]+/[^/]+\z!)
     @repo = repo
@@ -22,12 +40,14 @@ class Runner
 
   private
 
-  attr_reader :repo, :configs, :working_dir
+  attr_reader :repo, :configs, :working_dir, :sha
 
   def fetch
     system! 'git', 'clone', '--depth=1', repo, working_dir
     print "HEAD: "
-    system! 'git', 'rev-parse', 'HEAD', chdir: working_dir
+    @sha, status = Open3.capture2('git', 'rev-parse', 'HEAD', chdir: working_dir)
+    raise "Unexpected status #{status.exitstatus}" unless status.success?
+    puts @sha
   end
 
   def system!(*cmd)
@@ -63,7 +83,7 @@ class Runner
     #       It may uses too much memory.
     out, status = Open3.capture2e(*cmd, chdir: working_dir)
     print out
-    raise "Unexpected status: #{status.exitstatus}" unless [0, 1].include?(status.exitstatus)
-    raise "An error occrred! see the log." if out =~ /An error occurred while/
+    raise ExecRuboCopError.new(message: "Unexpected status: #{status.exitstatus}", command: cmd, repo: repo, sha: sha) unless [0, 1].include?(status.exitstatus)
+    raise ExecRuboCopError.new(message: "An error occrred! see the log.", command: cmd, repo: repo, sha: sha) if out =~ /An error occurred while/
   end
 end
