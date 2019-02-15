@@ -51,6 +51,7 @@ class Runner
 
     exec_rubocop(*opt) # With default formatter
     exec_rubocop '--auto-correct', *opt
+    system! 'git', 'reset', '--hard', chdir: working_dir
   end
 
   def exec_rubocop(*opts)
