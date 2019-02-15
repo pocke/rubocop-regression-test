@@ -3,8 +3,6 @@ require 'open3'
 require 'rubocop'
 
 class Runner
-  FORMATTERS = RuboCop::Formatter::FormatterSet::BUILTIN_FORMATTERS_FOR_KEYS.keys
-
   def initialize(repo, configs:)
     repo = "git@github.com:#{repo}.git" if repo.match(%r!\A[^/]+/[^/]+\z!)
     @repo = repo
@@ -52,10 +50,6 @@ class Runner
     end
 
     exec_rubocop(*opt) # With default formatter
-    FORMATTERS.each do |f|
-      # Changing formatter uses the cache, so it does not take a long time.
-      exec_rubocop '-f', f, *opt
-    end
     exec_rubocop '--auto-correct', *opt
   end
 
