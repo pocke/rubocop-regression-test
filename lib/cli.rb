@@ -50,7 +50,7 @@ class CLI
   end
 
   def configs
-    @configs ||= ConfigGenerator.generate_configs + [[:force_default_config, nil]]
+    @configs ||= ConfigGenerator.generate_configs + [all_cop_config]
   end
 
   def run_all_repos
@@ -66,5 +66,9 @@ class CLI
         @exit_status = EXIT_STATUS_ERR
       end
     end
+  end
+
+  def all_cop_config
+    [File.expand_path('../config/enabled_by_default.yml', __dir__), nil]
   end
 end
