@@ -67,8 +67,4 @@ class CLI
       end
     end
   end
-
-  def all_cop_config
-    [File.expand_path('../config/enabled_by_default.yml', __dir__), nil]
-  end
 end

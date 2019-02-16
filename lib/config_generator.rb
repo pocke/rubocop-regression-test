@@ -26,12 +26,14 @@ module ConfigGenerator
       end
     end
 
-    rubocop_yml_contents.map do |content|
+    res = rubocop_yml_contents.map do |content|
       tmppath = File.join(BASE_DIRECTORY, Time.now.to_f.to_s + '.yml')
       cop_names = content.keys
       File.write(tmppath, content.to_yaml)
       [tmppath, cop_names]
     end
+    res.push([File.expand_path('../config/enabled_by_default.yml', __dir__), nil])
+    res
   end
 
   private
