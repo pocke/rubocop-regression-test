@@ -50,7 +50,7 @@ class CLI
   end
 
   def configs
-    @configs ||= ConfigGenerator.generate_configs + [all_cop_config]
+    @configs ||= ConfigGenerator.generate_configs
   end
 
   def run_all_repos
