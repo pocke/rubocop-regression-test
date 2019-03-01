@@ -2,15 +2,17 @@ class CLI
   TARGET_REPOSITORIES = [
     # tric has many tricky code
     'tric/trick2013',
-    'tric/trick2015',
-    'tric/trick2018',
-    # ruby/spec has many edge cases
-    'ruby/spec',
-    # They have really large code base.
-    'ruby/ruby',
-    'rails/rails',
-    'gitlabhq/gitlabhq',
-    'discourse/discourse',
+
+    # TODO: Enable the following repositories
+    # 'tric/trick2015',
+    # 'tric/trick2018',
+    # # ruby/spec has many edge cases
+    # 'ruby/spec',
+    # # They have really large code base.
+    # 'ruby/ruby',
+    # 'rails/rails',
+    # 'gitlabhq/gitlabhq',
+    # 'discourse/discourse',
   ]
 
   EXIT_STATUS_SUCCSESS = 0
