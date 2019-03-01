@@ -91,7 +91,13 @@ class Runner
     #       because capture2e stores output as a string.
     #       It may uses too much memory.
     out, status = Open3.capture2e(*cmd, chdir: working_dir)
-    error_queue.push ExecRuboCopError.new(message: "Unexpected status: #{status.exitstatus}", command: cmd, repo: repo, sha: sha) unless [0, 1].include?(status.exitstatus)
+    unless [0, 1].include?(status.exitstatus)
+      # Infinite loop is noisy, so ignore it.
+      # If you challenge to remove infinite loop, let's remove this condition!
+      unless out.include?('Infinite loop detected in')
+        error_queue.push ExecRuboCopError.new(message: "Unexpected status: #{status.exitstatus}", command: cmd, repo: repo, sha: sha)
+      end
+    end
     error_queue.push ExecRuboCopError.new(message: "An error occrred! see the log.", command: cmd, repo: repo, sha: sha) if out =~ /An error occurred while/
   end
 end
