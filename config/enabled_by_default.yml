@@ -1,2 +1,7 @@
 AllCops:
   EnabledByDefault: true
+
+Layout/ClassStructure:
+  # This cop's auto-correction is really buggy,
+  # and fixing it is really hard, so ignore it.
+  AutoCorrect: false
