@@ -2,9 +2,9 @@ class CLI
   TARGET_REPOSITORIES = [
     # tric has many tricky code
     'tric/trick2013',
+    'tric/trick2015',
 
     # TODO: Enable the following repositories
-    # 'tric/trick2015',
     # 'tric/trick2018',
     # # ruby/spec has many edge cases
     # 'ruby/spec',
