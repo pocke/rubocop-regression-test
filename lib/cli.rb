@@ -8,6 +8,8 @@ class CLI
     # TODO: Enable the following repositories
     # # ruby/spec has many edge cases
     # 'ruby/spec',
+    # # Test on RuboCop itself.
+    # 'rubocop-hq/rubocop',
     # # They have really large code base.
     # 'ruby/ruby',
     # 'rails/rails',
