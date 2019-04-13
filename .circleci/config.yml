@@ -6,6 +6,9 @@ jobs:
       - image: circleci/ruby:2.6
     steps:
       - run:
+          name: Avoid hosts unknown for github
+          command: mkdir ~/.ssh/ && echo -e "Host github.com\n\tStrictHostKeyChecking no\n" > ~/.ssh/config
+      - run:
           name: Install RuboCop HEAD
           command: |
             git clone --depth 1 git@github.com:rubocop-hq/rubocop.git /tmp/rubocop
