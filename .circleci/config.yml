@@ -23,3 +23,13 @@ workflows:
   spec:
     jobs:
       - spec
+  daily:
+    jobs:
+      - spec
+    triggers:
+      - schedule:
+          cron: "30 1 * * *"
+          filters:
+            branches:
+              only:
+                - master
