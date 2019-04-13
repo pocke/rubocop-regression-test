@@ -5,6 +5,13 @@ jobs:
     docker:
       - image: circleci/ruby:2.6
     steps:
+      - run:
+          name: Install RuboCop HEAD
+          command: |
+            git clone --depth 1 git@github.com:rubocop-hq/rubocop.git /tmp/rubocop
+            cd /tmp/rubocop
+            bundle install
+            bundle exec rake install
       - checkout
       - run: ruby main.rb
 
