@@ -28,11 +28,12 @@ class CLI
     @argv = argv
     @error_queue = Thread::Queue.new
     @exit_status = EXIT_STATUS_SUCCSESS
-    @debug = ENV['DEBUG']
+    @debug = ENV['RUBOCOP_REGRESSION_TEST_DEBUG']
   end
 
   def start
     th = watch_error_queue
+    CircleCI.start
 
     if argv.empty?
       run_all_repos

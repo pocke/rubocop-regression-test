@@ -1,0 +1,35 @@
+version: 2
+
+jobs:
+  spec:
+    docker:
+      - image: circleci/ruby:2.6
+    steps:
+      - run:
+          name: Avoid hosts unknown for github
+          command: mkdir ~/.ssh/ && echo -e "Host github.com\n\tStrictHostKeyChecking no\n" > ~/.ssh/config
+      - run:
+          name: Install RuboCop HEAD
+          command: |
+            git clone --depth 1 git@github.com:rubocop-hq/rubocop.git /tmp/rubocop
+            cd /tmp/rubocop
+            bundle install
+            bundle exec rake install
+      - checkout
+      - run: ruby main.rb
+
+workflows:
+  version: 2
+  spec:
+    jobs:
+      - spec
+  daily:
+    jobs:
+      - spec
+    triggers:
+      - schedule:
+          cron: "30 1 * * *"
+          filters:
+            branches:
+              only:
+                - master
