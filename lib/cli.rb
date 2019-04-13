@@ -33,6 +33,7 @@ class CLI
 
   def start
     th = watch_error_queue
+    CircleCI.start
 
     if argv.empty?
       run_all_repos

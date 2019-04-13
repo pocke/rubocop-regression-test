@@ -4,8 +4,6 @@ jobs:
   spec:
     docker:
       - image: circleci/ruby:2.6
-    environment:
-      RUBOCOP_REGRESSION_TEST_DEBUG: '1'
     steps:
       - run:
           name: Avoid hosts unknown for github
