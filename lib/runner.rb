@@ -84,7 +84,7 @@ class Runner
   end
 
   def exec_rubocop(*opts)
-    cmd = ['rubocop', '--debug', '--rails'] + opts
+    cmd = ['rubocop', '--debug'] + opts
     cmd << '--parallel' unless opts.include?('--auto-correct')
     puts "$ " + cmd.join(' ') if debug
     # TODO: Replace capture2e with some pipe method,
