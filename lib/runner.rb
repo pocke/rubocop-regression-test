@@ -1,18 +1,24 @@
 require 'tmpdir'
 require 'open3'
+require 'fileutils'
 
 class Runner
+  LOG_DIRECTORY = '/tmp/rubocop-regression-test/log/'
+  FileUtils.mkdir_p(LOG_DIRECTORY) unless File.directory?(LOG_DIRECTORY)
+
   class ExecRuboCopError < StandardError
-    def initialize(message:, command:, repo:, sha:)
+    def initialize(message:, command:, repo:, sha:, log_path:)
       @message = message
       @command = command
       @repo = repo
       @sha = sha
+      @log_path = log_path
     end
 
     def message
       <<~END
         #{@message}
+        See #{@log_path}
         Please try executing the following command in #{@repo}, commit #{@sha}
         #{@command.join(' ')}
       END
@@ -95,9 +101,16 @@ class Runner
       # Infinite loop is noisy, so ignore it.
       # If you challenge to remove infinite loop, let's remove this condition!
       unless out.include?('Infinite loop detected in')
-        error_queue.push ExecRuboCopError.new(message: "Unexpected status: #{status.exitstatus}", command: cmd, repo: repo, sha: sha)
+        push_error(message: "Unexpected status: #{status.exitstatus}", command: cmd, stdout: out)
       end
     end
-    error_queue.push ExecRuboCopError.new(message: "An error occrred! see the log.", command: cmd, repo: repo, sha: sha) if out =~ /An error occurred while/
+    push_error(message: "An error occrred! see the log.", command: cmd, stdout: out)if out =~ /An error occurred while/
+  end
+
+  def push_error(message:, command:, stdout:)
+    log_path = File.join(LOG_DIRECTORY, Time.now.to_f.to_s)
+    File.write(log_path, "$ #{command.join(' ')}\n" + stdout)
+    err = ExecRuboCopError.new(message: message, command: command, repo: repo, sha: sha, log_path: log_path)
+    error_queue.push err
   end
 end
