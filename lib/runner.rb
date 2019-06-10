@@ -104,7 +104,7 @@ class Runner
         push_error(message: "Unexpected status: #{status.exitstatus}", command: cmd, stdout: out)
       end
     end
-    push_error(message: "An error occrred! see the log.", command: cmd, stdout: out)if out =~ /An error occurred while/
+    push_error(message: "An error occrred! see the log.", command: cmd, stdout: out)if out =~ /^An error occurred while/
   end
 
   def push_error(message:, command:, stdout:)
