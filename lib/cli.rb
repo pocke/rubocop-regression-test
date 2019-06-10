@@ -5,11 +5,12 @@ class CLI
     'tric/trick2015',
     'tric/trick2018',
 
+    # Test on RuboCop itself.
+    'rubocop-hq/rubocop',
+
     # TODO: Enable the following repositories
     # # ruby/spec has many edge cases
     # 'ruby/spec',
-    # # Test on RuboCop itself.
-    # 'rubocop-hq/rubocop',
     # # They have really large code base.
     # 'ruby/ruby',
     # 'rails/rails',
