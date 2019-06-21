@@ -1,6 +1,7 @@
 RuboCop Regression Test
 ====
 
+[![CircleCI](https://circleci.com/gh/pocke/rubocop-regression-test.svg?style=svg)](https://circleci.com/gh/pocke/rubocop-regression-test)
 
 
 Usage
