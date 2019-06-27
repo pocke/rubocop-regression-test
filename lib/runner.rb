@@ -1,11 +1,9 @@
 require 'tmpdir'
 require 'open3'
 require 'fileutils'
+require 'etc'
 
 class Runner
-  LOG_DIRECTORY = '/tmp/rubocop-regression-test/log/'
-  FileUtils.mkdir_p(LOG_DIRECTORY) unless File.directory?(LOG_DIRECTORY)
-
   class ExecRuboCopError < StandardError
     def initialize(message:, command:, repo:, sha:, log_path:)
       @message = message
@@ -25,6 +23,19 @@ class Runner
     end
   end
 
+  class ErrorNotifier
+    def initialize(error_queue:, repo:, sha:)
+      @error_queue = error_queue
+      @repo = repo
+      @sha = sha
+    end
+
+    def notify(message:, command:, log_path:)
+      err = ExecRuboCopError.new(message: message, command: command, repo: @repo, sha: @sha, log_path: log_path)
+      @error_queue.push err
+    end
+  end
+
   def initialize(repo, configs:, error_queue:, debug:)
     repo = "git@github.com:#{repo}.git" if repo.match(%r!\A[^/]+/[^/]+\z!)
     @repo = repo
@@ -35,29 +46,43 @@ class Runner
 
   def run
     Dir.mktmpdir('rubocop-regression-test-') do |dir|
-      @working_dir = dir
-
+      @source_dir = dir
       fetch
+
+      notifier = ErrorNotifier.new(error_queue: error_queue, repo: repo, sha: sha)
+
+      executors_queue = Thread::Queue.new
+
       configs.each do |config, cop_names|
-        run_rubocop_with_config(config: config, cop_names: cop_names)
+        executors_queue << Executor.new(config: config, cop_names: cop_names, source_dir: dir, auto_correct: true, debug: debug, error_notifier: notifier)
+        executors_queue << Executor.new(config: config, cop_names: cop_names, source_dir: dir, auto_correct: false, debug: debug, error_notifier: notifier)
       end
+      executors_queue.close
+
+      threads = thread_count.times.map do
+        Thread.new do
+          while e = executors_queue.pop
+            e.execute
+          end
+        end
+      end
+      threads.each(&:join)
     end
   end
 
-  private
+  attr_reader :repo, :configs, :source_dir, :sha, :error_queue, :debug
+  private :repo, :configs, :source_dir, :sha, :error_queue, :debug
 
-  attr_reader :repo, :configs, :working_dir, :sha, :error_queue, :debug
-
-  def fetch
-    system! 'git', 'clone', '--depth=1', repo, working_dir
+  private def fetch
+    system! 'git', 'clone', '--depth=1', repo, source_dir
     print "HEAD: " if debug
-    sha, status = Open3.capture2('git', 'rev-parse', 'HEAD', chdir: working_dir)
+    sha, status = Open3.capture2('git', 'rev-parse', 'HEAD', chdir: source_dir)
     @sha = sha.chomp
     raise "Unexpected status #{status.exitstatus}" unless status.success?
     puts @sha if debug
   end
 
-  def system!(*cmd)
+  private def system!(*cmd)
     puts "$ " + cmd.join(' ') if debug
     unless debug
       if cmd.last.is_a?(Hash)
@@ -71,46 +96,13 @@ class Runner
     raise "Unexpected status: #{$?.exitstatus}" unless $?.success?
   end
 
-  def run_rubocop_with_config(config:, cop_names:)
-    opt =
-      case config
-      when :force_default_config
-        ['--force-default-config']
-      else
-        ['--config', config]
-      end
-    if cop_names
-      opt << '--only'
-      opt << cop_names.join(',')
+  private def thread_count
+    if ENV['CIRCLECI']
+      # CircleCI container has two cores, but Ruby can see 32 cores.
+      # So we use 2 + 1 cores.
+      3
+    else
+      Etc.nprocessors
     end
-
-    exec_rubocop(*opt) # With default formatter
-    exec_rubocop '--auto-correct', *opt
-    system! 'git', 'reset', '--hard', chdir: working_dir
-  end
-
-  def exec_rubocop(*opts)
-    cmd = ['rubocop', '--debug'] + opts
-    cmd << '--parallel' unless opts.include?('--auto-correct')
-    puts "$ " + cmd.join(' ') if debug
-    # TODO: Replace capture2e with some pipe method,
-    #       because capture2e stores output as a string.
-    #       It may uses too much memory.
-    out, status = Open3.capture2e(*cmd, chdir: working_dir)
-    unless [0, 1].include?(status.exitstatus)
-      # Infinite loop is noisy, so ignore it.
-      # If you challenge to remove infinite loop, let's remove this condition!
-      unless out.include?('Infinite loop detected in')
-        push_error(message: "Unexpected status: #{status.exitstatus}", command: cmd, stdout: out)
-      end
-    end
-    push_error(message: "An error occrred! see the log.", command: cmd, stdout: out)if out =~ /^An error occurred while/
-  end
-
-  def push_error(message:, command:, stdout:)
-    log_path = File.join(LOG_DIRECTORY, Time.now.to_f.to_s)
-    File.write(log_path, "$ #{command.join(' ')}\n" + stdout)
-    err = ExecRuboCopError.new(message: message, command: command, repo: repo, sha: sha, log_path: log_path)
-    error_queue.push err
   end
 end
