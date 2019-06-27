@@ -32,7 +32,7 @@ class Executor
       end
     else
       @working_dir = source_dir
-      block.call(source_dir)
+      block.call
     end
   end
 
