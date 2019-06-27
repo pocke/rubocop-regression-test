@@ -16,9 +16,6 @@ $ bundle exec rake install
 
 $ cd /path/to/pocke/rubocop-regression-test
 
-# Run on many repositories, all configuration conbinations
-$ ruby main.rb
-
 # Run on specified repo, all configuration conbinations
 $ ruby main.rb owner/repo
 ```
