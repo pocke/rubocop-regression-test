@@ -37,13 +37,7 @@ class Executor
   end
 
   private def run_rubocop_with_config
-    opt =
-      case config
-      when :force_default_config
-        ['--force-default-config']
-      else
-        ['--config', config]
-      end
+    opt = ['--config', config]
 
     if cop_names
       opt << '--only'

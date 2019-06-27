@@ -32,7 +32,7 @@ module ConfigGenerator
       File.write(tmppath, content.to_yaml)
       [tmppath, cop_names]
     end
-    res.push([File.expand_path('../config/enabled_by_default.yml', __dir__), nil])
+    res.unshift([File.expand_path('../config/enabled_by_default.yml', __dir__), nil])
     res
   end
 
