@@ -1,31 +1,85 @@
 version: 2
 
+spec_definition: &spec_definition
+  docker:
+    - image: circleci/ruby:2.6
+  steps:
+    - run:
+        name: Avoid hosts unknown for github
+        command: mkdir ~/.ssh/ && echo -e "Host github.com\n\tStrictHostKeyChecking no\n" > ~/.ssh/config
+    - run:
+        name: Install RuboCop HEAD
+        command: |
+          git clone --depth 1 git@github.com:rubocop-hq/rubocop.git /tmp/rubocop
+          cd /tmp/rubocop
+          bundle install
+          bundle exec rake install
+    - checkout
+    - run: |
+        echo $TARGET_REPOSITORY
+        ruby main.rb $TARGET_REPOSITORY
+
+
 jobs:
-  spec:
-    docker:
-      - image: circleci/ruby:2.6
-    steps:
-      - run:
-          name: Avoid hosts unknown for github
-          command: mkdir ~/.ssh/ && echo -e "Host github.com\n\tStrictHostKeyChecking no\n" > ~/.ssh/config
-      - run:
-          name: Install RuboCop HEAD
-          command: |
-            git clone --depth 1 git@github.com:rubocop-hq/rubocop.git /tmp/rubocop
-            cd /tmp/rubocop
-            bundle install
-            bundle exec rake install
-      - checkout
-      - run: ruby main.rb
+  # Test on RuboCop itself.
+  test_rubocop:
+    <<: *spec_definition
+    environment:
+      TARGET_REPOSITORY: rubocop-hq/rubocop
+  # trick has many tricky code
+  test_trick2013:
+    <<: *spec_definition
+    environment:
+      TARGET_REPOSITORY: tric/trick2013
+  test_trick2015:
+    <<: *spec_definition
+    environment:
+      TARGET_REPOSITORY: tric/trick2015
+  test_trick2018:
+    <<: *spec_definition
+    environment:
+      TARGET_REPOSITORY: tric/trick2018
+
+  # # ruby/spec has many edge cases
+  # test_ruby_spec:
+  #   <<: *spec_definition
+  #   environment:
+  #     TARGET_REPOSITORY: ruby/spec
+
+  # # They have really large code base.
+  # test_ruby_ruby:
+  #   <<: *spec_definition
+  #   environment:
+  #     TARGET_REPOSITORY: ruby/ruby
+  # test_rails:
+  #   <<: *spec_definition
+  #   environment:
+  #     TARGET_REPOSITORY: rails/rails
+  # test_gitlab:
+  #   <<: *spec_definition
+  #   environment:
+  #     TARGET_REPOSITORY: gitlabhq/gitlabhq
+  # test_discourse:
+  #   <<: *spec_definition
+  #   environment:
+  #     TARGET_REPOSITORY: discourse/discourse
+
+
 
 workflows:
   version: 2
   spec:
     jobs:
-      - spec
+      - test_trick2013
+      - test_trick2015
+      - test_trick2018
+      - test_rubocop
   daily:
     jobs:
-      - spec
+      - test_trick2013
+      - test_trick2015
+      - test_trick2018
+      - test_rubocop
     triggers:
       - schedule:
           cron: "30 1 * * *"

@@ -1,23 +1,4 @@
 class CLI
-  TARGET_REPOSITORIES = [
-    # tric has many tricky code
-    'tric/trick2013',
-    'tric/trick2015',
-    'tric/trick2018',
-
-    # Test on RuboCop itself.
-    'rubocop-hq/rubocop',
-
-    # TODO: Enable the following repositories
-    # # ruby/spec has many edge cases
-    # 'ruby/spec',
-    # # They have really large code base.
-    # 'ruby/ruby',
-    # 'rails/rails',
-    # 'gitlabhq/gitlabhq',
-    # 'discourse/discourse',
-  ]
-
   EXIT_STATUS_SUCCSESS = 0
   EXIT_STATUS_ERR = 2
 
@@ -36,11 +17,9 @@ class CLI
     th = watch_error_queue
     CircleCI.start
 
-    if argv.empty?
-      run_all_repos
-    else
-      run_for(argv.first)
-    end
+    raise "Usage: ruby main.rb owner/repo" if argv.empty?
+
+    run_for(argv.first)
 
     error_queue.close
     th.join
@@ -57,12 +36,6 @@ class CLI
 
   def configs
     @configs ||= ConfigGenerator.generate_configs
-  end
-
-  def run_all_repos
-    TARGET_REPOSITORIES.each do |repo|
-      run_for repo
-    end
   end
 
   def watch_error_queue
