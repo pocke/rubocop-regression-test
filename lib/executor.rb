@@ -61,7 +61,7 @@ class Executor
     unless [0, 1].include?(status.exitstatus)
       # Infinite loop is noisy, so ignore it.
       # If you challenge to remove infinite loop, let's remove this condition!
-      unless out.include?('Infinite loop detected in')
+      if !out.include?('Infinite loop detected in') || ENV["INFINITE_LOOP_AS_ERROR"]
         push_error(message: "Unexpected status: #{status.exitstatus}", command: cmd, stdout: out)
       end
     end
