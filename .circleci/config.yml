@@ -82,7 +82,10 @@ workflows:
       - test_rubocop
     triggers:
       - schedule:
-          cron: "30 1 * * *"
+          # Run the task while I'm sleeping.
+          # JST: 4:30AM
+          # UTC: 19:30
+          cron: "30 19 * * *" 
           filters:
             branches:
               only:
