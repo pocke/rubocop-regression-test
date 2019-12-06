@@ -36,9 +36,7 @@ module ConfigGenerator
     res
   end
 
-  private
-
-  def cop_configs(cop_name)
+  private def cop_configs(cop_name)
     cop_config = RuboCopAdapter.default_config[cop_name]
 
     # e.g. %w[EnforcedHashRocketStyle EnforcedColonStyle EnforcedLastArgumentHashStyle]

@@ -26,19 +26,18 @@ class CLI
     exit @exit_status
   end
 
-  private
-
   attr_reader :argv, :error_queue, :debug
+  private :argv, :error_queue, :debug
 
-  def run_for(repo)
+  private def run_for(repo)
     Runner.new(repo, configs: configs, error_queue: error_queue, debug: debug).run
   end
 
-  def configs
+  private def configs
     @configs ||= ConfigGenerator.generate_configs
   end
 
-  def watch_error_queue
+  private def watch_error_queue
     Thread.new do
       while err = error_queue.pop
         puts err.message + "\n"
