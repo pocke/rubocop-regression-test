@@ -19,9 +19,9 @@ class CLI
 
     case subcommand
     when 'check'
-      check
-    when 'generate_config'
-      generate_config
+      command_check
+    when 'config'
+      command_config
     when 'help'
       usage!
     end
@@ -30,18 +30,19 @@ class CLI
   attr_reader :argv, :error_queue, :debug
   private :argv, :error_queue, :debug
 
-  private def check
+  private def command_check
     th = watch_error_queue
     CircleCI.start
-    run_for(argv[1])
+    run_for(args[0])
 
     error_queue.close
     th.join
     exit @exit_status
   end
 
-  private def generate_config
-    raise 'WIP'
+  private def command_config
+    n = args[0].to_i
+    puts File.read(configs[n][0])
   end
 
   private def run_for(repo)
@@ -65,11 +66,15 @@ class CLI
     @argv[0]
   end
 
+  private def args
+    @argv[1..]
+  end
+
   private def usage!
     puts <<~USAGE
       Usage:
         ruby main.rb check OWNER/REPO       # Run the test
-        ruby main.rb generate_config NUMBER # Generate configuration
+        ruby main.rb config NUMBER # Generate configuration
         ruby main.rb help                   # Display this message
     USAGE
     exit EXIT_STATUS_ERR
