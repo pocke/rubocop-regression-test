@@ -22,7 +22,7 @@ class CLI
       command_check
     when 'config'
       command_config
-    when 'help'
+    else
       usage!
     end
   end
