@@ -8,7 +8,7 @@ module RuboCopAdapter
   def configurable_cops
     default_config.to_h
       .reject{|key, cop_conf| enforced_styles(cop_conf).empty? }
-      .keys
+      .keys.sort
   end
 
 
