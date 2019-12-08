@@ -42,7 +42,7 @@ class CLI
 
   private def command_config
     n = args[0].to_i
-    puts File.read(configs[n][0])
+    puts File.read(configs[n])
   end
 
   private def run_for(repo)

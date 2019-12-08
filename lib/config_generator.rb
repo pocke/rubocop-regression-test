@@ -20,19 +20,21 @@ module ConfigGenerator
     end
 
     rubocop_yml_contents = cop_configs.transpose.map do |conf_set|
-      compacted = conf_set.compact
-      compacted.inject({}) do |a, b|
-        a.merge(b)
+      conf_set.compact.each_with_object({
+        'AllCops' => {
+          'DisabledByDefault' => true,
+        },
+      }) do |c, base|
+        base.merge!(c)
       end
     end
 
     res = rubocop_yml_contents.map do |content|
-      tmppath = File.join(BASE_DIRECTORY, Time.now.to_f.to_s + '.yml')
-      cop_names = content.keys
-      File.write(tmppath, content.to_yaml)
-      [tmppath, cop_names]
+      File.join(BASE_DIRECTORY, Time.now.to_f.to_s + '.yml').tap do |tmppath|
+        File.write(tmppath, content.to_yaml)
+      end
     end
-    res.unshift([File.expand_path('../config/enabled_by_default.yml', __dir__), nil])
+    res.unshift(File.expand_path('../config/enabled_by_default.yml', __dir__))
     res
   end
 

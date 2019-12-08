@@ -53,9 +53,9 @@ class Runner
 
       executors_queue = Thread::Queue.new
 
-      configs.each do |config, cop_names|
-        executors_queue << Executor.new(config: config, cop_names: cop_names, source_dir: dir, auto_correct: true, debug: debug, error_notifier: notifier)
-        executors_queue << Executor.new(config: config, cop_names: cop_names, source_dir: dir, auto_correct: false, debug: debug, error_notifier: notifier)
+      configs.each do |config|
+        executors_queue << Executor.new(config: config, source_dir: dir, auto_correct: true, debug: debug, error_notifier: notifier)
+        executors_queue << Executor.new(config: config, source_dir: dir, auto_correct: false, debug: debug, error_notifier: notifier)
       end
       executors_queue.close
 

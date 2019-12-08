@@ -4,9 +4,8 @@ class Executor
   LOG_DIRECTORY = '/tmp/rubocop-regression-test/log/'
   FileUtils.mkdir_p(LOG_DIRECTORY) unless File.directory?(LOG_DIRECTORY)
 
-  def initialize(config:, cop_names:, source_dir:, auto_correct:, debug:, error_notifier:)
+  def initialize(config:, source_dir:, auto_correct:, debug:, error_notifier:)
     @config = config
-    @cop_names = cop_names
     @source_dir = source_dir
     @auto_correct = auto_correct
     @working_dir = nil
@@ -20,8 +19,8 @@ class Executor
     end
   end
 
-  attr_reader :config, :cop_names, :source_dir, :auto_correct, :working_dir, :debug, :error_notifier
-  private :config, :cop_names, :source_dir, :auto_correct, :working_dir, :debug, :error_notifier
+  attr_reader :config, :source_dir, :auto_correct, :working_dir, :debug, :error_notifier
+  private :config, :source_dir, :auto_correct, :working_dir, :debug, :error_notifier
 
   private def with_working_dir(&block)
     if auto_correct
@@ -38,11 +37,6 @@ class Executor
 
   private def run_rubocop_with_config
     opt = ['--config', config]
-
-    if cop_names
-      opt << '--only'
-      opt << cop_names.join(',')
-    end
 
     if auto_correct
       opt.unshift '--auto-correct'
