@@ -5,20 +5,23 @@ require 'etc'
 
 class Runner
   class ExecRuboCopError < StandardError
-    def initialize(message:, command:, repo:, sha:, log_path:)
+    def initialize(message:, command:, repo:, sha:, log_path:, id:)
       @message = message
       @command = command
       @repo = repo
       @sha = sha
       @log_path = log_path
+      @id = id
     end
 
     def message
       <<~END
         #{@message}
         See #{@log_path}
-        Please try executing the following command in #{@repo}, commit #{@sha}
-        #{@command.join(' ')}
+        Please try executing the following command
+        $ ruby main.rb check #{@repo} #{@id}
+        Or execute it in #{@repo}, commit #{@sha}
+        $ #{@command.join(' ')}
       END
     end
   end
@@ -30,8 +33,8 @@ class Runner
       @sha = sha
     end
 
-    def notify(message:, command:, log_path:)
-      err = ExecRuboCopError.new(message: message, command: command, repo: @repo, sha: @sha, log_path: log_path)
+    def notify(message:, command:, log_path:, id:)
+      err = ExecRuboCopError.new(message: message, command: command, repo: @repo, sha: @sha, log_path: log_path, id: id)
       @error_queue.push err
     end
   end
@@ -53,9 +56,9 @@ class Runner
 
       executors_queue = Thread::Queue.new
 
-      configs.each do |config, cop_names|
-        executors_queue << Executor.new(config: config, cop_names: cop_names, source_dir: dir, auto_correct: true, debug: debug, error_notifier: notifier)
-        executors_queue << Executor.new(config: config, cop_names: cop_names, source_dir: dir, auto_correct: false, debug: debug, error_notifier: notifier)
+      configs.each.with_index do |config, idx|
+        executors_queue << Executor.new(config: config, source_dir: dir, auto_correct: true, debug: debug, error_notifier: notifier, id: ExecuteId.encode(config_number: idx, auto_correct: true))
+        executors_queue << Executor.new(config: config, source_dir: dir, auto_correct: false, debug: debug, error_notifier: notifier, id: ExecuteId.encode(config_number: idx, auto_correct: false))
       end
       executors_queue.close
 

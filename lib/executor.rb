@@ -4,14 +4,14 @@ class Executor
   LOG_DIRECTORY = '/tmp/rubocop-regression-test/log/'
   FileUtils.mkdir_p(LOG_DIRECTORY) unless File.directory?(LOG_DIRECTORY)
 
-  def initialize(config:, cop_names:, source_dir:, auto_correct:, debug:, error_notifier:)
+  def initialize(config:, source_dir:, auto_correct:, debug:, error_notifier:, id:)
     @config = config
-    @cop_names = cop_names
     @source_dir = source_dir
     @auto_correct = auto_correct
     @working_dir = nil
     @debug = debug
     @error_notifier = error_notifier
+    @id = id
   end
 
   def execute
@@ -20,8 +20,8 @@ class Executor
     end
   end
 
-  attr_reader :config, :cop_names, :source_dir, :auto_correct, :working_dir, :debug, :error_notifier
-  private :config, :cop_names, :source_dir, :auto_correct, :working_dir, :debug, :error_notifier
+  attr_reader :config, :source_dir, :auto_correct, :working_dir, :debug, :error_notifier, :id
+  private :config, :source_dir, :auto_correct, :working_dir, :debug, :error_notifier, :id
 
   private def with_working_dir(&block)
     if auto_correct
@@ -38,11 +38,6 @@ class Executor
 
   private def run_rubocop_with_config
     opt = ['--config', config]
-
-    if cop_names
-      opt << '--only'
-      opt << cop_names.join(',')
-    end
 
     if auto_correct
       opt.unshift '--auto-correct'
@@ -71,6 +66,6 @@ class Executor
   private def push_error(message:, command:, stdout:)
     log_path = File.join(LOG_DIRECTORY, Time.now.to_f.to_s)
     File.write(log_path, "$ #{command.join(' ')}\n" + stdout)
-    error_notifier.notify(message: message, command: command, log_path: log_path)
+    error_notifier.notify(message: message, command: command, log_path: log_path, id: id)
   end
 end
