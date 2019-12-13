@@ -73,9 +73,10 @@ class CLI
   private def usage!
     puts <<~USAGE
       Usage:
-        ruby main.rb check OWNER/REPO       # Run the test
-        ruby main.rb config NUMBER # Generate configuration
-        ruby main.rb help                   # Display this message
+        ruby main.rb check OWNER/REPO         # Run the test
+        ruby main.rb check GIT_CLONEABLE_PATH # Run the test
+        ruby main.rb config NUMBER            # Generate configuration
+        ruby main.rb help                     # Display this message
     USAGE
     exit EXIT_STATUS_ERR
   end
