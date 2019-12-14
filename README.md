@@ -11,7 +11,7 @@ Usage
 # Install the latest RuboCop
 $ git clone https://github.com/rubocop-hq/rubocop
 $ cd rubocop
-$ bunlde install
+$ bundle install
 $ bundle exec rake install
 
 $ cd /path/to/pocke/rubocop-regression-test
