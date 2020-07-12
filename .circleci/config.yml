@@ -70,16 +70,18 @@ workflows:
   version: 2
   spec:
     jobs:
+      - test_rubocop
+      - test_ruby_spec
       - test_trick2013
       - test_trick2015
       - test_trick2018
-      - test_rubocop
   daily:
     jobs:
+      - test_rubocop
+      - test_ruby_spec
       - test_trick2013
       - test_trick2015
       - test_trick2018
-      - test_rubocop
     triggers:
       - schedule:
           # Run the task while I'm sleeping.
